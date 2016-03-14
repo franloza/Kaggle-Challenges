@@ -1,0 +1,8 @@
+# Data is too big for Github
+data/
+
+# Statement is a PDF file, we don't want any of that
+statement/
+
+# Python cache files
+__pycache__/
