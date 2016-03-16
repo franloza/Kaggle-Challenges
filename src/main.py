@@ -121,7 +121,7 @@ if (selected_strategy == Strategies.GaussianBayes):
 # Adjustment
 if (adjustment):
 	skf = cv.StratifiedKFold(series.target, n_folds=3, shuffle=True)
-	grid_search = GridSearchCV(clf, parameters, n_jobs=-1, cv=skf)
+	grid_search = GridSearchCV(clf, parameters, scoring='roc_auc', cv=skf, n_jobs=-1)
 	grid_search.fit(series.data, series.target)
 	print('Best score: {:.3f}%'.format(grid_search.best_score_ * 100))
 	print('Best parameters set: {}'.format(grid_search.best_params_))
@@ -132,7 +132,7 @@ if (adjustment):
 if (not adjustment):
 	skf = cv.StratifiedKFold(series.target, n_folds=2, shuffle=True)
 	scores = cv.cross_val_score(clf, series.data, series.target, 
-	                            cv=skf, n_jobs=-1)
+	                            cv=skf, scoring='roc_auc', n_jobs=-1)
 	
 	print('Scores are: ')
 	print('Min: {:.3f}%  Max: {:.3f}%  Avg: {:.3f}% (+/- {:.2f}%)'
