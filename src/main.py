@@ -136,16 +136,25 @@ if (not adjustment):
 	
 	print('Scores are: ')
 	print('Min: {:.3f}%  Max: {:.3f}%  Avg: {:.3f}% (+/- {:.2f}%)'
-	      .format(min(scores) * 100, max(scores) * 100, scores.mean() * 100, 
-	             scores.std() * 200))
+	      .format(scores.min() * 100, scores.max() * 100, scores.mean() * 100, 
+	              scores.std() * 200))
 
 #==============================================================================
 
+'''
 if (additional_metrics):
-	X_train, X_test, y_train, y_test = cv.train_test_split(series.data, series.target, test_size=0.5)
-	clf.fit(X_train, y_train)
-	y_pred = clf.predict(X_test)
-	print('AUC score is {:.3f}%'.format(roc_auc_score(y_test, y_pred) * 100))
+	# Plot of a ROC curve for a specific class
+	plt.figure()
+	plt.plot(fpr[2], tpr[2], label='ROC curve (area = %0.2f)' % roc_auc[2])
+	plt.plot([0, 1], [0, 1], 'k--')
+	plt.xlim([0.0, 1.0])
+	plt.ylim([0.0, 1.05])
+	plt.xlabel('False Positive Rate')
+	plt.ylabel('True Positive Rate')
+	plt.title('Receiver operating characteristic example')
+	plt.legend(loc="lower right")
+	plt.show()
+'''
 
 #==============================================================================
 
