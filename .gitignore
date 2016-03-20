@@ -6,3 +6,6 @@ statement/
 
 # Python cache files
 __pycache__/
+
+#Compiled Python Files
+*.pyc
