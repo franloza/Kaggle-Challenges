@@ -18,10 +18,10 @@ from datetime import timedelta
 start_time = time()
 
 # Options
-adjustment = False
+adjustment = True
 dimension_reduc = False
-additional_metrics = True
-selected_strategy = Strategies.RandomForest
+additional_metrics = False
+selected_strategy = Strategies.Bagging
 
 #==============================================================================
 
@@ -83,11 +83,10 @@ if (selected_strategy == Strategies.RadiusNeighbors):
 # Bagging Meta-classifier
 if (selected_strategy == Strategies.Bagging):
 	if (adjustment):
-		parameters = {'base_estimator': [None, KNeighborsClassifier],
-					  'max_samples': [0.25, 0.5, 0.75, 1],
-					  'max_features': [0.25, 0.5, 0.75, 1],
-					  'bootstrap': [True, False], 'n_jobs': [-1],
-					  'bootstrap_features': [True, False]}
+		parameters = {'base_estimator': [None, RandomForestClassifier],
+					  'n_jobs': [-1],
+					  'n_estimators' : [200]
+					  }
 	else:
 		clf = BaggingClassifier(KNeighborsClassifier(n_neighbors=1,
 		                                             weights='uniform', n_jobs=-1))
@@ -97,16 +96,16 @@ if (selected_strategy == Strategies.Bagging):
 # Trees
 # Random Forest
 if (selected_strategy == Strategies.RandomForest):
+	clf = RandomForestClassifier()
 	if(adjustment):
-		parameters = {}
-	else:
-		clf = RandomForestClassifier()
+		parameters = {'n_jobs': [-1], 'n_estimators' : [200], 'max_features': [0.9]}
+
 # Decision Tree
 if (selected_strategy == Strategies.DecisionTree):
 	if(adjustment):
 		parameters = {}
 	else:
-		clf = DecisionTreeClassifier()
+		clf = DecisionTreeClassifier(n_jobs=-1, n_estimators=200, max_features = 0.9)
 
 #==============================================================================
 
@@ -152,15 +151,14 @@ if (additional_metrics):
 	# Shuffle and split training and test sets
 	X_train, X_test, y_train, y_test = cv.train_test_split(series.data[:-1],
 	 				series.target[:-1], test_size= test_size,random_state=0)
-	y_score = clf.fit(X_train, y_train).predict_proba(X_test)
+	y_score = clf.fit(X_train, y_train).predict(X_test)
 
 	# Compute ROC curve and ROC area
 	fpr = dict()
 	tpr = dict()
 	roc_auc = dict()
-	fpr, tpr, _ = roc_curve(y_test, y_score[:, 1])
+	fpr, tpr, _ = roc_curve(y_test, y_score)
 	roc_auc = auc(fpr, tpr)
-	print (fpr,tpr)
 
 	# Plot of a ROC curve for a specific class
 	plt.figure()
