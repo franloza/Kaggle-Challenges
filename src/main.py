@@ -18,10 +18,12 @@ from datetime import timedelta
 start_time = time()
 
 # Options
-adjustment = True
+adjustment = False
 dimension_reduc = False
 additional_metrics = False
+submission = True
 selected_strategy = Strategies.Bagging
+
 
 #==============================================================================
 
@@ -88,8 +90,8 @@ if (selected_strategy == Strategies.Bagging):
 					  'n_estimators' : [200]
 					  }
 	else:
-		clf = BaggingClassifier(KNeighborsClassifier(n_neighbors=1,
-		                                             weights='uniform', n_jobs=-1))
+		clf = BaggingClassifier(RandomForestClassifier(n_estimators=200
+		                                              ,n_jobs=-1))
 
 #==============================================================================
 
@@ -130,7 +132,7 @@ if (adjustment):
 
 # 10-fold validation with given parameters & estimator
 if (not adjustment):
-	skf = cv.StratifiedKFold(series.target, n_folds=2, shuffle=True)
+	skf = cv.StratifiedKFold(series.target, n_folds=5, shuffle=True)
 	scores = cv.cross_val_score(clf, series.data, series.target,
 	                            cv=skf, scoring='roc_auc', n_jobs=-1)
 

@@ -16,19 +16,19 @@ Min: 50.918%  Max: 51.280%  Avg: 51.099% (+/- 0.36%)
 Time elapsed: 0:00:22.619025
 
 SVC Linear
-============= 
+=============
 Min: 58.843%  Max: 59.224%  Avg: 59.033% (+/- 0.38%)
 Time elapsed: 0:00:26.064504
 
-SVC 
-============= 
+SVC
+=============
 Min: 48.320%  Max: 48.966%  Avg: 48.643% (+/- 0.65%)
 Time elapsed: 1:00:37.033142
 
 Decision Tree
-============= 
+=============
 Initial Data size: (76020, 371)
-Scores are: 
+Scores are:
 Min: 54.857%  Max: 55.462%  Avg: 55.159% (+/- 0.61%)
 Time elapsed: 0:00:27.557511
 
@@ -38,7 +38,7 @@ CONCLUSION: CHOOSE RANDOM FOREST
 
 Initial Data size: (76020, 371)
 Reduced Data size: (76020, 150)
-Scores are: 
+Scores are:
 Min: 66.987%  Max: 67.331%  Avg: 67.159% (+/- 0.34%)
 Time elapsed: 0:00:29.017030
 
@@ -47,81 +47,69 @@ CONCLUSION: NOT USE PCA
 3. Adjusting Random forest
 
     3.1. Choose number of estimators (trees)
-    
+
         3.1.1. Trying some initial stimators
-        
+
         parameters = {'n_estimators': [10, 20, 50, 100]}
 
         Initial Data size: (76020, 371)
         Best score: 77.582%
         Best parameters set: {'n_estimators': 100}
         Time elapsed: 0:03:15.035804
-    
+
         CONCLUSION: SCORE RISES AS WE INCREASE THE NUMBER OF ESTIMATORS
-        
+
         3.1.2 Choose a good trade-off n_estimators - time
-        
+
         parameters = {'n_estimators': [200]}
-        
+
         Initial Data size: (76020, 371)
         Best score: 78.951%
         Time elapsed: 0:04:52.965550 (ACCEPTABLE)
-        
+
         .
         .
-        .        
-        
+        .
+
     3.2. Choose maximum number of features in each split
-       
+
        3.2.1. Trying some initial number of features
-       
+
        parameters = {'n_jobs': [-1], 'max_features': ['log2','sqrt',0.5,]}
-       
+
        Initial Data size: (76020, 371)
        Best score: 70.213%
        Best parameters set: {'n_jobs': -1, 'max_features': 0.5}
        Time elapsed: 0:01:23.874259
-       
+
        parameters = {'n_jobs': [-1], 'max_features': [0.5,0.7, 0.9]}
-       
+
        Initial Data size: (76020, 371)
        Best score: 70.387%
        Best parameters set: {'n_jobs': -1, 'max_features': 0.9}
-       
+
        CONCLUSION: SCORE RISES AS WE INCREASE THE NUMBER OF MAX_FEATURES
-       
+
        3.2.2. Applying conclusions to previous results
-      
+
        Best score: 78.836%
        Best parameters set: {'n_estimators': 200, 'n_jobs': -1, 'max_features': 0.9}
        Time elapsed: 0:28:40.873196
-       
+
        CONCLUSION: IT'S NOT WORTH TO SPEND TIME SELECTING MORE FEATURES IN EACH SPLIT. TIME
        INCREASES AND PERFORMANCE DOESN'T.
        MANTAIN SQRT (DEFAULT) MAX_FEATURES
-      
+
  4. Using Bagging with Random Forest
- 
-        parameters = {'base_estimator': [None, RandomForestClassifier],
-					  'n_jobs': [-1],
-					  'n_estimators' : [200],
-					  }
 
-	#TODO: EXECUTE BAGGING WITH THIS PARAMETERS
-        
-        
-       
-       
-       
+      clf = BaggingClassifier(RandomForestClassifier(n_estimators=200
+                                               ,n_jobs=-1))
 
+     Initial Data size: (76020, 371)
+     Scores are:
+     Min: 79.667%  Max: 81.098%  Avg: 80.455% (+/- 1.07%)
+     Time elapsed: 0:11:32.181751
 
-    
+     CONCLUSION: BAGGING INCREASES THE SCORE AND TIME IS AFFORDABLE.
 
-
-
-
-
-
-
-
-
+     
