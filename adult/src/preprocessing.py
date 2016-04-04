@@ -1,15 +1,18 @@
-import numpy
-from collections import namedtuple
+import pandas
+from sklearn.preprocessing import LabelEncoder
 
-def get_data(additional_filter=True, load_submissions=False):
-	samples = numpy.genfromtxt('../data/train.csv', delimiter=',', skip_header=1)
+def get_data():
+	df = pandas.read_csv('../data/train.csv', header=0)
+	le = LabelEncoder()
 
-	print('Initial Data size: {}'.format(samples.shape))
+	df.workclass = le.fit_transform(df.workclass)
+	df.education = le.fit_transform(df.education)
+	df.marital_status = le.fit_transform(df['marital-status'])
+	df.occupation = le.fit_transform(df.occupation)
+	df.relationship = le.fit_transform(df.relationship)
+	df.race = le.fit_transform(df.race)
+	df.sex = le.fit_transform(df.sex)
+	df.native_country = le.fit_transform(df['native-country'])
+	df = df.drop(['marital-status', 'native-country'],axis=1)
 
-	data, target = samples[:,:-1], samples[:,-1:] # We split the data
-
-	series = namedtuple('Series', ['data', 'target'])
-	series.data = data
-	series.target = target.ravel()
-
-	return series
+	return df

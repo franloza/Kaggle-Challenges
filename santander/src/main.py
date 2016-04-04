@@ -153,7 +153,7 @@ if (submission):
 	test = pd.read_csv("../data/test.csv")
 	test_id = test.ID
 	#test = test.drop(["ID"],axis=1)
-	probs = clf.fit(scores.data, scores.target).predict_proba(test)
+	probs = clf.fit(series.data, series.target).predict_proba(test)
 	submission = pd.DataFrame({"ID":test_id, "TARGET": probs[:,1]})
 	submission.to_csv("../data/submission.csv", index=False)
 
