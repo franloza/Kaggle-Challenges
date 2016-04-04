@@ -19,7 +19,7 @@ from datetime import timedelta
 start_time = time()
 
 # Options
-adjustment = True
+adjustment = False
 dimension_reduc = False
 additional_metrics = False
 submission = True
@@ -28,7 +28,7 @@ selected_strategy = Strategies.Bagging
 #==============================================================================
 
 # Getting the data
-series= get_data()
+series = get_data()
 
 #==============================================================================
 
@@ -83,16 +83,15 @@ if (selected_strategy == Strategies.RadiusNeighbors):
 #==============================================================================
 
 # Bagging Meta-Classifier
-clf = BaggingClassifier(RandomForestClassifier(RandomForestClassifier(n_estimators=200
-											  ,n_jobs=-1)))
 if (selected_strategy == Strategies.Bagging):
+	clf = BaggingClassifier()
 	if (adjustment):
 		parameters = {'base_estimator': [None, RandomForestClassifier],
-					  'n_estimators' : [200]
-					  }
+					  'n_estimators' : [3, 5, 10, 30, 50, 100]}
 	else:
-		clf = BaggingClassifier(RandomForestClassifier(n_estimators=200
-		                                              ,n_jobs=-1))
+		clf.set_params(n_estimators=10, 
+		               base_estimator=RandomForestClassifier(n_estimators=200, 
+		                                        			   n_jobs=-1))
 
 #==============================================================================
 
@@ -108,7 +107,7 @@ if (selected_strategy == Strategies.DecisionTree):
 	if(adjustment):
 		parameters = {}
 	else:
-		clf = DecisionTreeClassifier(n_jobs=-1, n_estimators=200, max_features = 0.9)
+		clf = DecisionTreeClassifier(n_jobs=-1, n_estimators=200, max_features=0.9)
 
 #==============================================================================
 
@@ -123,7 +122,7 @@ if (selected_strategy == Strategies.GaussianBayes):
 
 # Adjustment
 if (adjustment):
-	skf = cv.StratifiedKFold(series.target, n_folds=10, shuffle=True)
+	skf = cv.StratifiedKFold(series.target, n_folds=3, shuffle=True)
 	grid_search = GridSearchCV(clf, parameters, scoring='roc_auc', cv=skf, n_jobs=-1)
 	grid_search.fit(series.data, series.target)
 	print('Best score: {:.3f}%'.format(grid_search.best_score_ * 100))
@@ -141,7 +140,7 @@ if (adjustment):
 
 # 10-fold validation with given parameters & estimator
 if (not adjustment):
-	skf = cv.StratifiedKFold(series.target, n_folds=10, shuffle=True)
+	skf = cv.StratifiedKFold(series.target, n_folds=2, shuffle=True)
 	scores = cv.cross_val_score(clf, series.data, series.target,
 	                            cv=skf, scoring='roc_auc', n_jobs=-1)
 
@@ -161,7 +160,6 @@ if (submission):
 #==============================================================================
 
 if (additional_metrics):
-
 	# ROC CURVE
 
 	# Parameters
@@ -194,5 +192,3 @@ if (additional_metrics):
 #==============================================================================
 
 print('Time elapsed: {}'.format(timedelta(seconds=(time() - start_time))))
-
-#==============================================================================
