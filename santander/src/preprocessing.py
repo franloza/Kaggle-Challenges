@@ -1,12 +1,13 @@
-import numpy
 from collections import namedtuple
+import pandas
 
 def get_data(additional_filter=True, load_submissions=False):
-	samples = numpy.genfromtxt('../data/train.csv', delimiter=',', skip_header=1)
+	df = pandas.read_csv('../data/train.csv', header=0)
 
-	print('Initial Data size: {}'.format(samples.shape))
+	print('Initial Data size: {}'.format(df.shape))
+	#df = df.drop(["ID"], axis=1)
 
-	data, target = samples[:,:-1], samples[:,-1:] # We split the data
+	data, target = df.values[:,:-1], df.values[:,-1:] # We split the data
 
 	series = namedtuple('Series', ['data', 'target'])
 	series.data = data

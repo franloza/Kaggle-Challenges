@@ -22,7 +22,7 @@ start_time = time()
 adjustment = False
 dimension_reduc = False
 additional_metrics = False
-submission = True
+submission = False
 selected_strategy = Strategies.Bagging
 
 #==============================================================================
@@ -153,8 +153,8 @@ if (submission):
 	test = pd.read_csv("../data/test.csv")
 	test_id = test.ID
 	#test = test.drop(["ID"],axis=1)
-	probs = clf.fit(series.data, series.target).predict_proba(test)
-	submission = pd.DataFrame({"ID":test_id, "TARGET": probs[:,1]})
+	prediction = clf.fit(series.data, series.target).predict(test)
+	submission = pd.DataFrame({"ID":test_id, "TARGET": prediction}).astype(int)
 	submission.to_csv("../data/submission.csv", index=False)
 
 #==============================================================================
@@ -167,7 +167,8 @@ if (additional_metrics):
 
 	# Shuffle and split training and test sets
 	X_train, X_test, y_train, y_test = cv.train_test_split(series.data[:-1],
-	 				series.target[:-1], test_size= test_size,random_state=0)
+	 													   series.target[:-1],
+	 													   test_size=test_size)
 	y_score = clf.fit(X_train, y_train).predict(X_test)
 
 	# Compute ROC curve and ROC area
