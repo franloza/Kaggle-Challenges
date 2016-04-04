@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import pandas as pd
 import matplotlib.pyplot as plt
 from preprocessing import get_data
 from strategies import Strategies
@@ -18,17 +19,16 @@ from datetime import timedelta
 start_time = time()
 
 # Options
-adjustment = False
+adjustment = True
 dimension_reduc = False
 additional_metrics = False
 submission = True
 selected_strategy = Strategies.Bagging
 
-
 #==============================================================================
 
 # Getting the data
-series = get_data()
+series= get_data()
 
 #==============================================================================
 
@@ -82,11 +82,12 @@ if (selected_strategy == Strategies.RadiusNeighbors):
 
 #==============================================================================
 
-# Bagging Meta-classifier
+# Bagging Meta-Classifier
+clf = BaggingClassifier(RandomForestClassifier(RandomForestClassifier(n_estimators=200
+											  ,n_jobs=-1)))
 if (selected_strategy == Strategies.Bagging):
 	if (adjustment):
 		parameters = {'base_estimator': [None, RandomForestClassifier],
-					  'n_jobs': [-1],
 					  'n_estimators' : [200]
 					  }
 	else:
@@ -100,7 +101,7 @@ if (selected_strategy == Strategies.Bagging):
 if (selected_strategy == Strategies.RandomForest):
 	clf = RandomForestClassifier()
 	if(adjustment):
-		parameters = {'n_jobs': [-1], 'n_estimators' : [200], 'max_features': [0.9]}
+		parameters = {}
 
 # Decision Tree
 if (selected_strategy == Strategies.DecisionTree):
@@ -122,17 +123,25 @@ if (selected_strategy == Strategies.GaussianBayes):
 
 # Adjustment
 if (adjustment):
-	skf = cv.StratifiedKFold(series.target, n_folds=3, shuffle=True)
+	skf = cv.StratifiedKFold(series.target, n_folds=10, shuffle=True)
 	grid_search = GridSearchCV(clf, parameters, scoring='roc_auc', cv=skf, n_jobs=-1)
 	grid_search.fit(series.data, series.target)
 	print('Best score: {:.3f}%'.format(grid_search.best_score_ * 100))
 	print('Best parameters set: {}'.format(grid_search.best_params_))
 
+	if (submission):
+		test = pd.read_csv("../data/test.csv")
+		test_id = test.ID
+		#test = test.drop(["ID"],axis=1)
+		probs = grid_search.predict_proba(test)
+		submission = pd.DataFrame({"ID":test_id, "TARGET": probs[:,1]})
+		submission.to_csv("../data/submission.csv", index=False)
+
 #==============================================================================
 
 # 10-fold validation with given parameters & estimator
 if (not adjustment):
-	skf = cv.StratifiedKFold(series.target, n_folds=5, shuffle=True)
+	skf = cv.StratifiedKFold(series.target, n_folds=10, shuffle=True)
 	scores = cv.cross_val_score(clf, series.data, series.target,
 	                            cv=skf, scoring='roc_auc', n_jobs=-1)
 
@@ -140,6 +149,14 @@ if (not adjustment):
 	print('Min: {:.3f}%  Max: {:.3f}%  Avg: {:.3f}% (+/- {:.2f}%)'
 	      .format(scores.min() * 100, scores.max() * 100, scores.mean() * 100,
 	              scores.std() * 200))
+
+if (submission):
+	test = pd.read_csv("../data/test.csv")
+	test_id = test.ID
+	#test = test.drop(["ID"],axis=1)
+	probs = clf.fit(scores.data, scores.target).predict_proba(test)
+	submission = pd.DataFrame({"ID":test_id, "TARGET": probs[:,1]})
+	submission.to_csv("../data/submission.csv", index=False)
 
 #==============================================================================
 
@@ -177,3 +194,5 @@ if (additional_metrics):
 #==============================================================================
 
 print('Time elapsed: {}'.format(timedelta(seconds=(time() - start_time))))
+
+#==============================================================================
