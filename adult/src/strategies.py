@@ -8,12 +8,13 @@ class AutoNumber(Enum):
          return obj
 
 class Strategies(AutoNumber):
-	LinearSVC = ()
-	SVC = ()
-	NuSVC = ()
-	KNeighbors = ()
-	RadiusNeighbors = ()
-	Bagging = ()
-	RandomForest = ()
-	DecisionTree = ()
-	GaussianBayes = ()
+    LinearSVC = ()
+    SVC = ()
+    NuSVC = ()
+    KNeighbors = ()
+    RadiusNeighbors = ()
+    Bagging = ()
+    RandomForest = ()
+    DecisionTree = ()
+    XGB = ()
+    GaussianBayes = ()

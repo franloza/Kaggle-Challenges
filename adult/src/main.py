@@ -13,6 +13,7 @@ from sklearn.neighbors import KNeighborsClassifier, RadiusNeighborsClassifier
 from sklearn.grid_search import GridSearchCV
 from sklearn.naive_bayes import GaussianNB
 from sklearn.decomposition import RandomizedPCA
+from xgboost.sklearn import XGBClassifier
 from time import time
 from datetime import timedelta
 
@@ -22,13 +23,13 @@ start_time = time()
 adjustment = False
 dimension_reduc = False
 additional_metrics = False
-submission = False
-selected_strategy = Strategies.Bagging
+export_submission = True
+selected_strategy = Strategies.XGB
 
 #==============================================================================
 
 # Getting the data
-series = get_data()
+[series,test] = get_data(export_submission)
 
 #==============================================================================
 
@@ -84,13 +85,12 @@ if (selected_strategy == Strategies.RadiusNeighbors):
 
 # Bagging Meta-Classifier
 if (selected_strategy == Strategies.Bagging):
-	clf = BaggingClassifier()
+	clf = BaggingClassifier(RandomForestClassifier())
 	if (adjustment):
-		parameters = {'base_estimator': [None, RandomForestClassifier],
-					  'n_estimators' : [3, 5, 10, 30, 50, 100]}
+		parameters = {'n_estimators' : [200]}
 	else:
-		clf.set_params(n_estimators=10, 
-		               base_estimator=RandomForestClassifier(n_estimators=200, 
+		clf.set_params(n_estimators=10,
+		               base_estimator=RandomForestClassifier(n_estimators=200,
 		                                        			   n_jobs=-1))
 
 #==============================================================================
@@ -100,23 +100,38 @@ if (selected_strategy == Strategies.Bagging):
 if (selected_strategy == Strategies.RandomForest):
 	clf = RandomForestClassifier()
 	if(adjustment):
-		parameters = {}
+		parameters = {'n_estimators':[200]}
+	else:
+		clf = RandomForestClassifier()
 
 # Decision Tree
 if (selected_strategy == Strategies.DecisionTree):
+	clf = DecisionTreeClassifier()
 	if(adjustment):
 		parameters = {}
 	else:
-		clf = DecisionTreeClassifier(n_jobs=-1, n_estimators=200, max_features=0.9)
+		clf = DecisionTreeClassifier(n_estimators=200)
 
 #==============================================================================
 
 # Gaussian Bayes
 if (selected_strategy == Strategies.GaussianBayes):
+	clf = GaussianNB()
 	if(adjustment):
 		parameters = {}
 	else:
 		clf = GaussianNB()
+
+#==============================================================================
+# XGB Classifier
+if (selected_strategy == Strategies.XGB):
+	clf = XGBClassifier()
+
+	if(adjustment):
+		parameters = {'colsample_bytree' : [0.5,0.8,0.9]}
+	else:
+		clf.set_params(max_depth=6, learning_rate=0.1, n_estimators=350, \
+		min_child_weight = 2, gamma= 0.2,colsample_bytree=0.9)
 
 #==============================================================================
 
@@ -128,19 +143,14 @@ if (adjustment):
 	print('Best score: {:.3f}%'.format(grid_search.best_score_ * 100))
 	print('Best parameters set: {}'.format(grid_search.best_params_))
 
-	if (submission):
-		test = pd.read_csv("../data/test.csv")
-		test_id = test.ID
-		#test = test.drop(["ID"],axis=1)
-		probs = grid_search.predict_proba(test)
-		submission = pd.DataFrame({"ID":test_id, "TARGET": probs[:,1]})
-		submission.to_csv("../data/submission.csv", index=False)
+	if (export_submission):
+		pred = grid_search.predict(test)
 
 #==============================================================================
 
-# 10-fold validation with given parameters & estimator
+# n-fold validation with given parameters & estimator
 if (not adjustment):
-	skf = cv.StratifiedKFold(series.target, n_folds=2, shuffle=True)
+	skf = cv.StratifiedKFold(series.target, n_folds=3, shuffle=True)
 	scores = cv.cross_val_score(clf, series.data, series.target,
 	                            cv=skf, scoring='roc_auc', n_jobs=-1)
 
@@ -148,14 +158,8 @@ if (not adjustment):
 	print('Min: {:.3f}%  Max: {:.3f}%  Avg: {:.3f}% (+/- {:.2f}%)'
 	      .format(scores.min() * 100, scores.max() * 100, scores.mean() * 100,
 	              scores.std() * 200))
-
-if (submission):
-	test = pd.read_csv("../data/test.csv")
-	test_id = test.ID
-	#test = test.drop(["ID"],axis=1)
-	prediction = clf.fit(series.data, series.target).predict(test)
-	submission = pd.DataFrame({"ID":test_id, "TARGET": prediction[:,1]})
-	submission.to_csv("../data/submission.csv", index=False)
+	if (export_submission):
+		pred = clf.fit(series.data, series.target).predict(test)
 
 #==============================================================================
 
@@ -192,3 +196,9 @@ if (additional_metrics):
 #==============================================================================
 
 print('Time elapsed: {}'.format(timedelta(seconds=(time() - start_time))))
+
+#==============================================================================
+if (export_submission):
+	print('Exporting prediction for submission...')
+	submission = pd.DataFrame({"TARGET": pred})
+	submission.to_csv("../data/submission.csv", index=False, header=False)
