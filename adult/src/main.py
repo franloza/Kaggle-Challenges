@@ -29,7 +29,7 @@ selected_strategy = Strategies.XGB
 #==============================================================================
 
 # Getting the data
-[series,test] = get_data(export_submission)
+series, test = get_data(export_submission)
 
 #==============================================================================
 
@@ -131,14 +131,18 @@ if selected_strategy == Strategies.XGB:
         parameters = {'colsample_bytree' : [0.5, 0.8, 0.9]}
     else:
         clf.set_params(max_depth=6, learning_rate=0.1, n_estimators=350, 
-                       min_child_weight = 2, gamma= 0.2, colsample_bytree=0.9)
+                       min_child_weight=2, gamma=0.2, colsample_bytree=0.9)
+
+#==============================================================================
+
+# K-fold used for adjustmet/simple validation
+skf = cv.StratifiedKFold(series.target, n_folds=10, shuffle=True)
 
 #==============================================================================
 
 # Adjustment
 if adjustment:
-    skf = cv.StratifiedKFold(series.target, n_folds=3, shuffle=True)
-    grid_search = GridSearchCV(clf, parameters, scoring='roc_auc', cv=skf, n_jobs=-1)
+    grid_search = GridSearchCV(clf, parameters, scoring='accuracy', cv=skf, n_jobs=-1)
     grid_search.fit(series.data, series.target)
     print('Best score: {:.3f}%'.format(grid_search.best_score_ * 100))
     print('Best parameters set: {}'.format(grid_search.best_params_))
@@ -150,9 +154,8 @@ if adjustment:
 
 # n-fold validation with given parameters & estimator
 if not adjustment:
-    skf = cv.StratifiedKFold(series.target, n_folds=3, shuffle=True)
     scores = cv.cross_val_score(clf, series.data, series.target,
-                                cv=skf, scoring='roc_auc', n_jobs=-1)
+                                cv=skf, scoring='accuracy', n_jobs=-1)
 
     print('Scores are: ')
     print('Min: {:.3f}%  Max: {:.3f}%  Avg: {:.3f}% (+/- {:.2f}%)'
@@ -171,7 +174,7 @@ if additional_metrics:
 
     # Shuffle and split training and test sets
     X_train, X_test, y_train, y_test = cv.train_test_split(series.data[:-1],
-                    series.target[:-1], test_size= test_size,random_state=0)
+                    series.target[:-1], test_size=test_size, random_state=0)
     y_score = clf.fit(X_train, y_train).predict(X_test)
 
     # Compute ROC curve and ROC area

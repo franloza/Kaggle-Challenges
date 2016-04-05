@@ -19,7 +19,7 @@ def get_data(load_test=False):
         path = '../data/test.csv'
         test = process_data(path,proc_label=False)
 
-    return [series,test]
+    return series, test
 
 def process_data(path, proc_label=True):
     df = pandas.read_csv(path, header=0)
@@ -34,7 +34,6 @@ def process_data(path, proc_label=True):
     df['marital-status'] = le.fit_transform(df['marital-status'])
     df.occupation = le.fit_transform(df.occupation)
     df.relationship = le.fit_transform(df.relationship)
-    df.race = le.fit_transform(df.race)
     df.sex = le.fit_transform(df.sex)
 
     # Capital gain mapping (Decreases score)
@@ -42,9 +41,11 @@ def process_data(path, proc_label=True):
 
     # Native country mapping
     df['native-country'] = df['native-country'].apply(map_native_country)
+    df.race = df.race.apply(map_race)
+    #df.education = df.education.apply(map_education)
 
     # Process the label if it's training data
-    if(proc_label):
+    if proc_label:
         df.income = le.fit_transform(df.income)
 
     return df.values
@@ -77,3 +78,17 @@ def map_capital_gain(amount):
         return 2
     else:
         return 0
+
+def map_race(race):
+    if race == 'White':
+        return 0
+    else:
+        return 1
+
+def map_education(education):
+    if education in ['Bachelors', 'Masters', 'Doctorate']:
+        return 0
+    elif education in ['Some-college', 'Prof-school', 'HS-grad', 'Assoc-acdm', 'Assoc-voc']:
+        return 1
+    else:
+        return 2
